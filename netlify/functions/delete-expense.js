@@ -3,7 +3,7 @@
 
 const { google } = require('googleapis')
 
-const SHEET_ID   = process.env.SHEET_ID || '1qtYrS41jCtHBHRS4Bz3vn8YwU32IRBu-ClMYbhWobfk'
+const SHEET_ID   = process.env.SHEET_ID
 const SHEET_NAME = 'expenses'
 
 const CORS = {
