@@ -120,9 +120,28 @@ export function useExpenseStore() {
     ? `You spent ${Math.round((todaySpend / dailyAverage) * 100)}% of your daily average today`
     : 'Start adding expenses to unlock insights'
 
+  // ── Monthly breakdown (last 6 months) ────────────────────────────────
+  const monthlyData = useMemo(() => {
+    const months: { key: string; label: string; total: number; expenses: typeof expenses }[] = []
+    for (let i = 5; i >= 0; i--) {
+      const start = startOfMonth(subMonths(new Date(), i))
+      const end   = startOfMonth(subMonths(new Date(), i - 1))
+      const label = format(start, 'MMM yyyy')
+      const key   = format(start, 'yyyy-MM')
+      const monthExpenses = expenses.filter((e) => {
+        const d = parseISO(e.date)
+        return d >= start && d < end
+      })
+      const total = monthExpenses.reduce((s, e) => s + e.amount, 0)
+      months.push({ key, label, total, expenses: monthExpenses })
+    }
+    return months
+  }, [expenses])
+
   return {
     expenses, banks, loading, syncing, error,
     smartDefaults, totalThisMonth, lastMonthTotal, dailyAverage, todaySpend, insight,
+    monthlyData,
     addExpense, deleteExpense, setBanks,
   }
 }

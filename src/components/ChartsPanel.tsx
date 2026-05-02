@@ -166,3 +166,21 @@ export function AnalyticsCharts({ expenses }: { expenses: Expense[] }) {
 
 // Keep old export names so nothing breaks
 export { CategoryDonut as HomeCharts }
+
+// Month-over-month bar chart
+export function MonthlyComparisonChart({ data }: { data: { label: string; total: number }[] }) {
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={data} barSize={28}>
+        <XAxis dataKey="label" stroke="#94A3B8" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+        <YAxis hide />
+        <Tooltip formatter={(v: number) => currency(v)} contentStyle={tooltipStyle} itemStyle={{ color: '#fff' }} />
+        <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+          {data.map((_, i) => (
+            <Cell key={i} fill={i === data.length - 1 ? '#3B82F6' : '#1E293B'} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
