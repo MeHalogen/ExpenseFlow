@@ -12,9 +12,12 @@ const schema = z.object({
   amount:   z.coerce.number().min(1),
   category: z.string().min(1),
   mode:     z.enum(['UPI', 'Card', 'Cash']),
-  bank:     z.string().min(1),
+  bank:     z.string().optional().default(''),
   note:     z.string().optional().default(''),
   date:     z.string(),
+}).refine((d) => d.mode === 'Cash' || (d.bank && d.bank.length > 0), {
+  message: 'Bank is required for UPI and Card payments',
+  path: ['bank'],
 })
 type FormValues = z.infer<typeof schema>
 
@@ -48,6 +51,8 @@ export function QuickAddSheet({ open, onOpenChange, banks, defaults, onSubmit }:
   }, [defaults, form])
 
   const selectedCategory = form.watch('category')
+  const selectedMode     = form.watch('mode')
+  const isCash           = selectedMode === 'Cash'
   const Icon = useMemo(() => categories.find((c) => c.label === selectedCategory)?.icon, [selectedCategory])
 
   async function handleSubmit(values: FormValues) {
@@ -96,7 +101,10 @@ export function QuickAddSheet({ open, onOpenChange, banks, defaults, onSubmit }:
                   <option key={c.label} value={c.label} className="bg-[#0F1319]">{c.label}</option>
                 ))}
               </select>
-              <select className={fieldCls} {...form.register('mode')}>
+              <select className={fieldCls} {...form.register('mode')} onChange={(e) => {
+                  form.setValue('mode', e.target.value as 'UPI' | 'Card' | 'Cash')
+                  if (e.target.value === 'Cash') form.setValue('bank', '')
+                }}>
                 {paymentModes.map((m) => (
                   <option key={m} value={m} className="bg-[#0F1319]">{m}</option>
                 ))}
@@ -104,22 +112,24 @@ export function QuickAddSheet({ open, onOpenChange, banks, defaults, onSubmit }:
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <input
-                list="bank-options"
-                placeholder="Bank"
-                className={fieldCls}
-                {...form.register('bank')}
-              />
+              {!isCash && (
+                <select className={fieldCls} {...form.register('bank')}>
+                  <option value="" className="bg-[#0F1319]">Select bank</option>
+                  {banks.map((b) => (
+                    <option key={b} value={b} className="bg-[#0F1319]">{b}</option>
+                  ))}
+                </select>
+              )}
               <input
                 type="date"
-                className={fieldCls}
+                className={`${fieldCls} ${isCash ? 'col-span-2' : ''}`}
                 {...form.register('date')}
               />
             </div>
 
-            <datalist id="bank-options">
-              {banks.map((b) => <option key={b} value={b} />)}
-            </datalist>
+            {form.formState.errors.bank && (
+              <p className="text-xs text-danger">{form.formState.errors.bank.message}</p>
+            )}
 
             <input
               placeholder="Note (optional)"
