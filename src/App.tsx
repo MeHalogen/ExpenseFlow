@@ -18,7 +18,7 @@ export default function App() {
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('home')
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  const { expenses, banks, loading, syncing, smartDefaults, totalThisMonth, lastMonthTotal, dailyAverage, insight, addExpense, deleteExpense } = useExpenseStore()
+  const { expenses, banks, loading, syncing, smartDefaults, totalThisMonth, lastMonthTotal, dailyAverage, insight, monthlyData, addExpense, deleteExpense } = useExpenseStore()
 
   function handleDelete(id: string) { deleteExpense(id); toast.success('Deleted') }
   async function handleAdd(input: Parameters<typeof addExpense>[0]) { await addExpense(input); toast.success('Saved') }
@@ -56,7 +56,7 @@ export default function App() {
               transition={{ duration: 0.15, ease: 'easeOut' }}
             >
               {tab === 'home'          && <HomePage expenses={expenses} totalThisMonth={totalThisMonth} lastMonthTotal={lastMonthTotal} dailyAverage={dailyAverage} insight={insight} onDelete={handleDelete} />}
-              {tab === 'analytics'     && <AnalyticsPage expenses={expenses} />}
+              {tab === 'analytics'     && <AnalyticsPage monthlyData={monthlyData} />}
               {tab === 'transactions'  && <TransactionsPage expenses={expenses} banks={banks} onDelete={handleDelete} />}
             </motion.div>
           </AnimatePresence>

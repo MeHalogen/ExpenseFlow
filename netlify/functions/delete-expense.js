@@ -1,10 +1,9 @@
 // /.netlify/functions/delete-expense
-// Deletes a row by id from the Google Sheet
+// Searches ALL sheet tabs for a row by id and deletes it
 
 const { google } = require('googleapis')
 
-const SHEET_ID   = process.env.SHEET_ID
-const SHEET_NAME = 'expenses'
+const SHEET_ID = process.env.SHEET_ID
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -37,54 +36,47 @@ exports.handler = async (event) => {
 
     const sheets = google.sheets({ version: 'v4', auth: getAuth() })
 
-    // 1. Get the numeric sheet gid for the "expenses" tab
+    // Get all tabs with their sheetIds
     const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID })
-    const sheet       = spreadsheet.data.sheets.find(
-      (s) => s.properties.title === SHEET_NAME
-    )
-    if (!sheet) {
-      return {
-        statusCode: 404,
-        headers:    CORS,
-        body:       JSON.stringify({ error: `Sheet "${SHEET_NAME}" not found` }),
+    const tabs = spreadsheet.data.sheets.map((s) => ({
+      title:   s.properties.title,
+      sheetId: s.properties.sheetId,
+    }))
+
+    // Search each tab for the row with matching id
+    for (const tab of tabs) {
+      const colA     = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range:         `${tab.title}!A:A`,
+      })
+      const rows     = colA.data.values || []
+      const rowIndex = rows.findIndex((row) => row[0] === String(id))
+
+      if (rowIndex !== -1) {
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: SHEET_ID,
+          requestBody: {
+            requests: [{
+              deleteDimension: {
+                range: {
+                  sheetId:    tab.sheetId,
+                  dimension:  'ROWS',
+                  startIndex: rowIndex,
+                  endIndex:   rowIndex + 1,
+                },
+              },
+            }],
+          },
+        })
+        return {
+          statusCode: 200,
+          headers:    CORS,
+          body:       JSON.stringify({ success: true }),
+        }
       }
     }
-    const sheetGid = sheet.properties.sheetId
 
-    // 2. Find the 0-based row index in column A (row 0 = header)
-    const colA     = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range:         `${SHEET_NAME}!A:A`,
-    })
-    const rows     = colA.data.values || []
-    const rowIndex = rows.findIndex((row) => row[0] === String(id))
-
-    if (rowIndex === -1) {
-      return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: 'Row not found' }) }
-    }
-
-    // 3. Delete that exact row
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: {
-        requests: [{
-          deleteDimension: {
-            range: {
-              sheetId:    sheetGid,
-              dimension:  'ROWS',
-              startIndex: rowIndex,
-              endIndex:   rowIndex + 1,
-            },
-          },
-        }],
-      },
-    })
-
-    return {
-      statusCode: 200,
-      headers:    CORS,
-      body:       JSON.stringify({ success: true }),
-    }
+    return { statusCode: 404, headers: CORS, body: JSON.stringify({ error: 'Row not found' }) }
   } catch (err) {
     console.error('[delete-expense]', err.message)
     return {

@@ -1,10 +1,9 @@
 // /.netlify/functions/get-expenses
-// Reads all rows from the "expenses" sheet and returns them as a JSON array
+// Reads ALL sheet tabs and returns merged expenses as a JSON array
 
 const { google } = require('googleapis')
 
-const SHEET_ID   = process.env.SHEET_ID
-const SHEET_NAME = 'expenses'
+const SHEET_ID = process.env.SHEET_ID
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -21,37 +20,52 @@ function getAuth() {
   })
 }
 
+function rowToExpense(row) {
+  return {
+    id:         String(row[0] ?? ''),
+    amount:     parseFloat(row[1])  || 0,
+    category:   String(row[2] ?? ''),
+    mode:       String(row[3] ?? 'UPI'),
+    bank:       String(row[4] ?? ''),
+    note:       String(row[5] ?? ''),
+    date:       String(row[6] ?? ''),
+    created_at: String(row[7] ?? ''),
+  }
+}
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: CORS, body: '' }
   }
 
   try {
-    const sheets   = google.sheets({ version: 'v4', auth: getAuth() })
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range:         `${SHEET_NAME}!A2:H`,   // skip header row
-    })
+    const sheets = google.sheets({ version: 'v4', auth: getAuth() })
 
-    const rows     = response.data.values || []
-    const expenses = rows
-      .filter((row) => row[0])               // skip blank rows
-      .map((row) => ({
-        id:         String(row[0] ?? ''),
-        amount:     parseFloat(row[1])  || 0,
-        category:   String(row[2] ?? ''),
-        mode:       String(row[3] ?? 'UPI'),
-        bank:       String(row[4] ?? ''),
-        note:       String(row[5] ?? ''),
-        date:       String(row[6] ?? ''),
-        created_at: String(row[7] ?? ''),
-      }))
-      .reverse()                             // newest first
+    // Get all tab names
+    const meta = await sheets.spreadsheets.get({
+      spreadsheetId: SHEET_ID,
+      fields: 'sheets.properties.title',
+    })
+    const tabs = meta.data.sheets.map((s) => s.properties.title)
+
+    // Read every tab and merge
+    const allExpenses = []
+    for (const tab of tabs) {
+      const res = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range:         `${tab}!A2:H`,
+      })
+      const rows = res.data.values || []
+      rows.filter((r) => r[0]).forEach((row) => allExpenses.push(rowToExpense(row)))
+    }
+
+    // Sort newest first
+    allExpenses.sort((a, b) => new Date(b.date) - new Date(a.date))
 
     return {
       statusCode: 200,
       headers:    CORS,
-      body:       JSON.stringify({ expenses }),
+      body:       JSON.stringify({ expenses: allExpenses }),
     }
   } catch (err) {
     console.error('[get-expenses]', err.message)
