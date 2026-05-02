@@ -1,21 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { addDays, format, parseISO, startOfMonth, subMonths } from 'date-fns'
+import { format, parseISO, startOfMonth, subMonths } from 'date-fns'
 import { Expense, ExpenseInput } from '@/types'
 import { defaultBanks } from '@/lib/constants'
 import { fetchExpenses, createExpense, destroyExpense } from '@/lib/api'
 
 const LOCAL_KEY = 'expenseflow-cache-v1'
 const PREF_KEY  = 'expenseflow-prefs-v1'
-const today     = new Date()
-
-// Seed data shown before any remote data loads (gives instant paint)
-const seed: Expense[] = [
-  { id: 's1', amount: 240,  category: 'Food',     mode: 'UPI',  bank: 'HDFC',  note: 'Lunch',   date: format(today, 'yyyy-MM-dd'),              created_at: today.toISOString() },
-  { id: 's2', amount: 890,  category: 'Travel',   mode: 'Card', bank: 'ICICI', note: 'Cab',     date: format(addDays(today, -1), 'yyyy-MM-dd'), created_at: addDays(today, -1).toISOString() },
-  { id: 's3', amount: 1450, category: 'Shopping', mode: 'Card', bank: 'HDFC',  note: 'Shoes',   date: format(addDays(today, -2), 'yyyy-MM-dd'), created_at: addDays(today, -2).toISOString() },
-  { id: 's4', amount: 320,  category: 'Food',     mode: 'UPI',  bank: 'HDFC',  note: 'Dinner',  date: format(addDays(today, -3), 'yyyy-MM-dd'), created_at: addDays(today, -3).toISOString() },
-  { id: 's5', amount: 599,  category: 'Bills',    mode: 'UPI',  bank: 'ICICI', note: 'Netflix', date: format(addDays(today, -4), 'yyyy-MM-dd'), created_at: addDays(today, -4).toISOString() },
-]
 
 export function useExpenseStore() {
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -29,7 +19,7 @@ export function useExpenseStore() {
     const cached = localStorage.getItem(LOCAL_KEY)
     const prefs  = localStorage.getItem(PREF_KEY)
 
-    setExpenses(cached ? JSON.parse(cached) : seed)
+    setExpenses(cached ? JSON.parse(cached) : [])
     if (prefs) setBanks(JSON.parse(prefs).banks ?? defaultBanks)
 
     // ── 2. Then fetch from Google Sheets in background ──────────────────
