@@ -1,0 +1,29 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/get-expenses"
+  to   = "/.netlify/functions/get-expenses"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from = "/api/add-expense"
+  to   = "/.netlify/functions/add-expense"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from = "/api/delete-expense"
+  to   = "/.netlify/functions/delete-expense"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200

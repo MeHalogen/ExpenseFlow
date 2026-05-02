@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body, #root { min-height: 100%; }
+body { @apply bg-ink text-white antialiased; font-family: Inter, system-ui, sans-serif; }
+* { -webkit-tap-highlight-color: transparent; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+.safe-pb { padding-bottom: calc(env(safe-area-inset-bottom) + 5rem); }
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Flat surface — no blur, no glow */
+.surface { background-color: #121722; }
+
+/* Divider */
+.divider { border-top: 1px solid rgba(255,255,255,0.07); }
+
+/* Active press state */
+.pressable { @apply transition-transform duration-100 active:scale-[0.97]; }

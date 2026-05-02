@@ -1,0 +1,2 @@
+import { motion } from 'framer-motion'; import { Card } from '@/components/ui/card'
+export function StatCard({ label, value, hint }: { label: string; value: string; hint: string }) { return <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} transition={{duration:0.28}}><Card><p className="text-xs uppercase tracking-[0.22em] text-muted">{label}</p><p className="tabular mt-2 text-2xl font-semibold tracking-tight">{value}</p><p className="mt-1 text-sm text-muted">{hint}</p></Card></motion.div> }
