@@ -12,6 +12,7 @@ const categoryColor: Record<string, string> = {
   Health:   '#22C55E',
   Fun:      '#FB923C',
   General:  '#94A3B8',
+  Grocery:  '#B942AD',
   Other:    '#94A3B8',
 }
 
