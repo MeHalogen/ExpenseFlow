@@ -73,3 +73,4 @@ Enable realtime for the `expenses` table in Supabase.
 - The app falls back to local cache when Supabase env vars are missing.
 - For full PWA installability, add `vite-plugin-pwa` and a manifest in a later pass.
 - Edit and gesture actions can be expanded further with a native-swipe library if needed.
+# ExpenseFlow2
