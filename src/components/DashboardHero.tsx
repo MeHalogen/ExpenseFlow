@@ -27,7 +27,7 @@ export function DashboardHero({ metrics: m }: { metrics: Metrics }) {
           <div className="h-full bg-primary" style={{ width: `${m.sourceSplitPct.own}%` }} />
         </div>
         <div className="mt-2 flex items-center justify-between text-xs">
-          <span className="text-success">Dad's cash {m.sourceSplitPct.dad}% · {currency(m.dadCashSpent)}</span>
+          <span className="text-success">Cash {m.sourceSplitPct.dad}% · {currency(m.dadCashSpent)}</span>
           <span className="text-primary">Your money {m.sourceSplitPct.own}% · {currency(m.ownMoneySpent)}</span>
         </div>
       </div>

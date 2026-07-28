@@ -8,7 +8,7 @@ export const SEED_TAXONOMY: { category: string; subcategories: string[] }[] = [
   { category: 'Car', subcategories: ['EMI', 'Cleaning', 'Service', 'Insurance'] },
   { category: 'Bills', subcategories: ['Rent', 'Electricity', 'iCloud', 'Apple Music', 'Claude', 'Phone/Internet'] },
   { category: 'Health', subcategories: ['Medicine', 'Doctor', 'Gym', 'Personal care'] },
-  { category: 'Income', subcategories: ['Salary', 'Cash from Dad', 'Other'] },
+  { category: 'Income', subcategories: ['Salary', 'Cash', 'Other'] },
   { category: 'Investment', subcategories: ['SIP'] },
   { category: 'Other', subcategories: ['Misc', 'Cash withdrawal', 'Uncategorized'] },
 ]
