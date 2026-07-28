@@ -1,24 +1,19 @@
 import { useMemo } from 'react'
-import { TrendingDown, TrendingUp } from 'lucide-react'
 import { parseISO, startOfMonth } from 'date-fns'
 import { Expense } from '@/types'
 import { currency } from '@/lib/utils'
 import { CategoryDonut } from '@/components/ChartsPanel'
 import { TransactionList } from '@/components/TransactionList'
+import { DashboardHero } from '@/components/DashboardHero'
 
 interface Props {
   expenses: Expense[]
-  totalThisMonth: number
-  lastMonthTotal: number
+  metrics: Parameters<typeof DashboardHero>[0]['metrics']
   dailyAverage: number
-  insight: string
   onDelete: (id: string) => void
 }
 
-export function HomePage({ expenses, totalThisMonth, lastMonthTotal, dailyAverage, insight, onDelete }: Props) {
-  const pctChange = lastMonthTotal > 0 ? ((totalThisMonth - lastMonthTotal) / lastMonthTotal) * 100 : null
-  const isUp = pctChange !== null && pctChange > 0
-
+export function HomePage({ expenses, metrics, dailyAverage, onDelete }: Props) {
   const topCategory = useMemo(() => {
     const counts = expenses.reduce<Record<string, number>>((acc, e) => {
       acc[e.category] = (acc[e.category] ?? 0) + e.amount
@@ -44,18 +39,7 @@ export function HomePage({ expenses, totalThisMonth, lastMonthTotal, dailyAverag
     <div className="space-y-8 pb-4">
 
       {/* ── Hero ─────────────────────────────────────── */}
-      <section className="pt-4">
-        <p className="text-sm text-muted mb-1">This month</p>
-        <h2 className="tabular text-5xl font-bold tracking-tight text-white leading-none">
-          {currency(totalThisMonth)}
-        </h2>
-        {pctChange !== null && (
-          <div className={`mt-3 inline-flex items-center gap-1.5 text-sm font-medium ${isUp ? 'text-danger' : 'text-success'}`}>
-            {isUp ? <TrendingUp className="size-4" /> : <TrendingDown className="size-4" />}
-            {isUp ? '+' : ''}{pctChange.toFixed(1)}% vs last month
-          </div>
-        )}
-      </section>
+      <DashboardHero metrics={metrics} />
 
       {/* ── Inline stats ─────────────────────────────── */}
       <section>

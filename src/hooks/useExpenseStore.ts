@@ -3,6 +3,7 @@ import { format, parseISO, startOfMonth, subMonths } from 'date-fns'
 import { Config, Expense, ExpenseInput } from '@/types'
 import { defaultBanks } from '@/lib/constants'
 import { fetchExpenses, createExpense, destroyExpense, fetchConfig, ingestSms, updateExpense as apiUpdate, ensureRecurring } from '@/lib/api'
+import { computeMetrics } from '@/lib/metrics'
 
 const LOCAL_KEY = 'expenseflow-cache-v1'
 const PREF_KEY  = 'expenseflow-prefs-v1'
@@ -122,6 +123,8 @@ export function useExpenseStore() {
   const daysElapsed    = Math.max(1, new Date().getDate())
   const dailyAverage   = totalThisMonth / daysElapsed
 
+  const monthMetrics = useMemo(() => computeMetrics(thisMonthExp), [thisMonthExp])
+
   const todaySpend = expenses
     .filter((e) => e.date === format(new Date(), 'yyyy-MM-dd'))
     .reduce((s, e) => s + e.amount, 0)
@@ -176,7 +179,7 @@ export function useExpenseStore() {
   return {
     expenses, banks, loading, syncing, error,
     smartDefaults, totalThisMonth, lastMonthTotal, dailyAverage, todaySpend, insight,
-    monthlyData,
+    monthlyData, monthMetrics,
     config,
     pending: expenses.filter((e) => e.status === 'pending'),
     addExpense, deleteExpense, setBanks,
