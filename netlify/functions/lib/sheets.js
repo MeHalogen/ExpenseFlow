@@ -1,4 +1,4 @@
-import { google } from 'googleapis'
+const { google } = require('googleapis')
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
@@ -75,4 +75,4 @@ async function ensureTab(sheets, spreadsheetId, tabName) {
   }
 }
 
-export { HEADERS, CORS, MONTHS, getTabName, getAuth, rowToExpense, expenseToRow, ensureTab }
+module.exports = { HEADERS, CORS, MONTHS, getTabName, getAuth, rowToExpense, expenseToRow, ensureTab }
