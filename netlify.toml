@@ -24,6 +24,12 @@
   force  = true
 
 [[redirects]]
+  from = "/api/get-config"
+  to   = "/.netlify/functions/get-config"
+  status = 200
+  force  = true
+
+[[redirects]]
   from = "/*"
   to   = "/index.html"
   status = 200
