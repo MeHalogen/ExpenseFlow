@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { format, parseISO, startOfMonth, subMonths } from 'date-fns'
-import { Expense, ExpenseInput } from '@/types'
+import { Config, Expense, ExpenseInput } from '@/types'
 import { defaultBanks } from '@/lib/constants'
-import { fetchExpenses, createExpense, destroyExpense } from '@/lib/api'
+import { fetchExpenses, createExpense, destroyExpense, fetchConfig, ingestSms, updateExpense as apiUpdate, ensureRecurring } from '@/lib/api'
 
 const LOCAL_KEY = 'expenseflow-cache-v1'
 const PREF_KEY  = 'expenseflow-prefs-v1'
@@ -13,6 +13,7 @@ export function useExpenseStore() {
   const [loading, setLoading]   = useState(true)
   const [syncing, setSyncing]   = useState(false) // background sync indicator
   const [error, setError]       = useState<string | null>(null)
+  const [config, setConfig]     = useState<Config>({ recurring: [], rules: [], taxonomy: [] })
 
   // ── 1. Hydrate from localStorage immediately (instant paint) ──────────
   useEffect(() => {
@@ -38,6 +39,15 @@ export function useExpenseStore() {
         setSyncing(false)
         setLoading(false)
       })
+
+    fetchConfig().then(setConfig).catch((e) => console.warn('[config]', e.message))
+    const monthKey = format(new Date(), 'yyyy-MM')
+    if (localStorage.getItem('expenseflow-recurring-ran') !== monthKey) {
+      ensureRecurring(monthKey)
+        .then(() => { localStorage.setItem('expenseflow-recurring-ran', monthKey); return fetchExpenses() })
+        .then((remote) => { setExpenses(remote); localStorage.setItem(LOCAL_KEY, JSON.stringify(remote)) })
+        .catch((e) => console.warn('[ensure-recurring]', e.message))
+    }
   }, [])
 
   // Persist bank preferences
@@ -138,10 +148,38 @@ export function useExpenseStore() {
     return months
   }, [expenses])
 
+  // ── Confirm expense (patch + optional rule learning) ─────────────────
+  const confirmExpense = async (id: string, patch: Partial<Expense>, learnRule?: { keyword: string; category: string; subcategory: string }) => {
+    setExpenses((prev) => {
+      const next = prev.map((e) => (e.id === id ? { ...e, ...patch } : e))
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(next))
+      return next
+    })
+    try { await apiUpdate(id, patch, learnRule) }
+    catch (err) { console.error('[confirmExpense]', err); setError('Update failed — will retry on refresh') }
+  }
+
+  // ── Submit SMS for ingestion ──────────────────────────────────────────
+  const submitSms = async (text: string) => {
+    const secret = import.meta.env.VITE_INGEST_SECRET as string
+    const res = await ingestSms(text, secret)
+    if (res.expense) {
+      setExpenses((prev) => {
+        const next = [res.expense as Expense, ...prev]
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(next))
+        return next
+      })
+    }
+    return res
+  }
+
   return {
     expenses, banks, loading, syncing, error,
     smartDefaults, totalThisMonth, lastMonthTotal, dailyAverage, todaySpend, insight,
     monthlyData,
+    config,
+    pending: expenses.filter((e) => e.status === 'pending'),
     addExpense, deleteExpense, setBanks,
+    confirmExpense, submitSms,
   }
 }
