@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { BarChart3, Home, Receipt, Plus } from 'lucide-react'
+import { BarChart3, Home, Receipt, Plus, Inbox } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import { QuickAddSheet } from '@/components/QuickAddSheet'
 import { useExpenseStore } from '@/hooks/useExpenseStore'
 import { HomePage } from '@/pages/HomePage'
 import { AnalyticsPage } from '@/pages/AnalyticsPage'
 import { TransactionsPage } from '@/pages/TransactionsPage'
+import { InboxPage } from '@/pages/InboxPage'
 
 const tabs = [
   { key: 'home',         label: 'Home',         icon: Home },
+  { key: 'inbox',        label: 'Inbox',        icon: Inbox },
   { key: 'analytics',   label: 'Analytics',    icon: BarChart3 },
   { key: 'transactions',label: 'Transactions', icon: Receipt },
 ] as const
@@ -18,7 +20,7 @@ export default function App() {
   const [tab, setTab] = useState<(typeof tabs)[number]['key']>('home')
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  const { expenses, banks, loading, syncing, smartDefaults, dailyAverage, monthlyData, monthMetrics, addExpense, deleteExpense } = useExpenseStore()
+  const { expenses, banks, loading, syncing, smartDefaults, dailyAverage, monthlyData, monthMetrics, config, pending, addExpense, deleteExpense, confirmExpense, submitSms } = useExpenseStore()
 
   function handleDelete(id: string) { deleteExpense(id); toast.success('Deleted') }
   async function handleAdd(input: Parameters<typeof addExpense>[0]) { await addExpense(input); toast.success('Saved') }
@@ -56,6 +58,7 @@ export default function App() {
               transition={{ duration: 0.15, ease: 'easeOut' }}
             >
               {tab === 'home'          && <HomePage expenses={expenses} metrics={monthMetrics} dailyAverage={dailyAverage} onDelete={handleDelete} />}
+              {tab === 'inbox'         && <InboxPage pending={pending} config={config} onConfirm={confirmExpense} />}
               {tab === 'analytics'     && <AnalyticsPage monthlyData={monthlyData} />}
               {tab === 'transactions'  && <TransactionsPage expenses={expenses} banks={banks} onDelete={handleDelete} />}
             </motion.div>
@@ -70,11 +73,14 @@ export default function App() {
             <button
               key={key}
               onClick={() => setTab(key)}
-              className={`pressable flex flex-col items-center gap-1 px-4 py-1 text-[11px] font-medium transition-colors duration-100
+              className={`pressable relative flex flex-col items-center gap-1 px-4 py-1 text-[11px] font-medium transition-colors duration-100
                 ${tab === key ? 'text-primary' : 'text-muted'}`}
             >
               <Icon className={`size-5 ${tab === key ? 'stroke-[2px]' : 'stroke-[1.5px]'}`} />
               {label}
+              {key === 'inbox' && pending.length > 0 && (
+                <span className="absolute -top-0.5 right-3 min-w-4 h-4 px-1 rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center">{pending.length}</span>
+              )}
             </button>
           ))}
         </div>
@@ -89,7 +95,7 @@ export default function App() {
         <Plus className="size-6 text-white stroke-[2.5px]" />
       </button>
 
-      <QuickAddSheet open={sheetOpen} onOpenChange={setSheetOpen} banks={banks} defaults={smartDefaults} onSubmit={handleAdd} />
+      <QuickAddSheet open={sheetOpen} onOpenChange={setSheetOpen} banks={banks} defaults={smartDefaults} config={config} onSubmit={handleAdd} onSubmitSms={submitSms} />
     </div>
   )
 }
