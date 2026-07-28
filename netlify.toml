@@ -42,6 +42,12 @@
   force  = true
 
 [[redirects]]
+  from = "/api/ensure-recurring"
+  to   = "/.netlify/functions/ensure-recurring"
+  status = 200
+  force  = true
+
+[[redirects]]
   from = "/*"
   to   = "/index.html"
   status = 200
