@@ -1,4 +1,4 @@
-import { TaxonomyRow } from '@/types'
+import { TaxonomyRow, TxType } from '@/types'
 
 export const SEED_TAXONOMY: { category: string; subcategories: string[] }[] = [
   { category: 'Food', subcategories: ['Groceries', 'Eating out', 'Delivery', 'Coffee & snacks'] },
@@ -28,4 +28,12 @@ export function buildTaxonomy(rows: TaxonomyRow[]): { category: string; subcateg
 
 export function subcategoriesFor(taxonomy: { category: string; subcategories: string[] }[], category: string): string[] {
   return taxonomy.find((t) => t.category === category)?.subcategories ?? []
+}
+
+// Derive the transaction type from the chosen category so manual entries of
+// Income / Investment are recorded correctly instead of defaulting to 'expense'.
+export function deriveTxType(category: string): TxType {
+  if (category === 'Income') return 'income'
+  if (category === 'Investment') return 'investment'
+  return 'expense'
 }

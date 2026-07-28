@@ -44,10 +44,18 @@ export function useExpenseStore() {
     fetchConfig().then(setConfig).catch((e) => console.warn('[config]', e.message))
     const monthKey = format(new Date(), 'yyyy-MM')
     if (localStorage.getItem('expenseflow-recurring-ran') !== monthKey) {
+      // Claim the month synchronously *before* the async call so a second
+      // overlapping mount (React.StrictMode dev double-mount, or a second
+      // browser tab) sees the flag already set and skips re-running the
+      // recurring engine — preventing duplicate rent/SIP/bill rows.
+      localStorage.setItem('expenseflow-recurring-ran', monthKey)
       ensureRecurring(monthKey)
-        .then(() => { localStorage.setItem('expenseflow-recurring-ran', monthKey); return fetchExpenses() })
+        .then(() => fetchExpenses())
         .then((remote) => { setExpenses(remote); localStorage.setItem(LOCAL_KEY, JSON.stringify(remote)) })
-        .catch((e) => console.warn('[ensure-recurring]', e.message))
+        .catch((e) => {
+          console.warn('[ensure-recurring]', e.message)
+          localStorage.removeItem('expenseflow-recurring-ran')
+        })
     }
   }, [])
 

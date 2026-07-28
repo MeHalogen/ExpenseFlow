@@ -6,7 +6,7 @@ import { format } from 'date-fns'
 import { X } from 'lucide-react'
 import { z } from 'zod'
 import { categories, paymentModes, accounts } from '@/lib/constants'
-import { buildTaxonomy, subcategoriesFor } from '@/lib/taxonomy'
+import { buildTaxonomy, subcategoriesFor, deriveTxType } from '@/lib/taxonomy'
 import { PasteSmsBox } from '@/components/PasteSmsBox'
 import { Config, Expense, ExpenseInput } from '@/types'
 
@@ -65,6 +65,7 @@ export function QuickAddSheet({ open, onOpenChange, banks, defaults, config, onS
   async function handleSubmit(values: FormValues) {
     await onSubmit({
       ...values,
+      type: deriveTxType(values.category),
       note: values.note ?? '',
       bank: values.mode === 'Cash' ? 'Cash' : values.bank ?? '',
       subcategory: values.subcategory ?? '',
