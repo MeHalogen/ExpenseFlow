@@ -36,6 +36,12 @@
   force  = true
 
 [[redirects]]
+  from = "/api/update-expense"
+  to   = "/.netlify/functions/update-expense"
+  status = 200
+  force  = true
+
+[[redirects]]
   from = "/*"
   to   = "/index.html"
   status = 200
