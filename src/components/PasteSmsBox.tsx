@@ -17,6 +17,7 @@ export function PasteSmsBox({ onSubmit }: Props) {
     try {
       const res = await onSubmit(text.trim())
       if (res.status === 'duplicate') toast('Already captured')
+      else if (res.status === 'ignored') { toast('Reminder — not logged'); setText('') }
       else if (res.expense && res.expense.amount > 0) { toast.success(`Captured ${currency(res.expense.amount)} → Inbox`); setText('') }
       else toast.warning("Couldn't read the amount — check the Inbox")
     } catch (e) {

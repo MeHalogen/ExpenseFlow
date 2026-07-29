@@ -40,15 +40,26 @@ function parseMerchant(text) {
   return null
 }
 
+// True for advance-notice / reminder messages that are NOT actual transactions,
+// e.g. "Rs 500 will be debited for SIP on 05-Aug", "payment due", "e-mandate reminder".
+// These must be ignored so they don't create phantom expenses; the real debit
+// confirmation arrives separately and is captured then.
+function isReminder(text) {
+  const t = String(text || '')
+  return /\bwill\s+be\s+(debited|deducted|charged|auto[-\s]?debited|paid)\b/i.test(t)
+    || /\b(reminder|payment\s+due|due\s+on|is\s+due|upcoming|scheduled\s+for|standing\s+instruction|si\s+due)\b/i.test(t)
+}
+
 function parseSms(text) {
   const t = String(text || '')
   return {
-    amount:    parseAmount(t),
-    bank:      parseBank(t),
-    mode:      parseMode(t),
-    merchant:  parseMerchant(t),
-    direction: parseDirection(t),
+    amount:     parseAmount(t),
+    bank:       parseBank(t),
+    mode:       parseMode(t),
+    merchant:   parseMerchant(t),
+    direction:  parseDirection(t),
+    isReminder: isReminder(t),
   }
 }
 
-module.exports = { parseSms, parseAmount, parseBank, parseMode, parseMerchant, parseDirection }
+module.exports = { parseSms, parseAmount, parseBank, parseMode, parseMerchant, parseDirection, isReminder }

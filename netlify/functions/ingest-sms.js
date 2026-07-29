@@ -25,6 +25,13 @@ exports.handler = async (event) => {
     if (!text) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'text is required' }) }
 
     const parsed = parseSms(text)
+
+    // Skip advance-notice / reminder messages ("will be debited", "payment due").
+    // They aren't real transactions; the actual debit confirmation is captured later.
+    if (parsed.isReminder) {
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ status: 'ignored', reason: 'reminder' }) }
+    }
+
     const date = new Date().toISOString().slice(0, 10)
     const sheets = google.sheets({ version: 'v4', auth: getAuth() })
     const rules = await readRules(sheets)

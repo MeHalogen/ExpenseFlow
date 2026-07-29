@@ -27,4 +27,17 @@ describe('parseSms', () => {
     expect(r.amount).toBeNull()
     expect(r.bank).toBeNull()
   })
+  it('flags a future-tense reminder as isReminder', () => {
+    const r = parseSms('Reminder: Rs 16,000 will be debited from your ICICI a/c for SIP on 05-Aug-26.')
+    expect(r.isReminder).toBe(true)
+  })
+  it('flags a payment-due reminder as isReminder', () => {
+    const r = parseSms('Your credit card payment of Rs 5,000 is due on 10-Aug. Pay now to avoid charges.')
+    expect(r.isReminder).toBe(true)
+  })
+  it('does NOT flag a real completed debit as a reminder', () => {
+    const r = parseSms('ICICI Bank Acct XX123 debited Rs 450.00 on 15-Jul-26; Swiggy credited. UPI:5123.')
+    expect(r.isReminder).toBe(false)
+    expect(r.direction).toBe('debit')
+  })
 })
